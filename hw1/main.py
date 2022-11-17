@@ -50,7 +50,7 @@ sqrt_fine = np.sqrt(1.1)
 while np.sum([sqrt_taylor_term(k) for k in np.arange(0,n+1)]) != sqrt_fine:
     n += 1
 
-print(f"taylor series value (should be the same as sqrt(1.1)): {np.sum([sqrt_taylor_term(n) for n in np.arange(0,n)])}")
+print(f"taylor series value (should be the same as sqrt(1.1)): {np.sum([sqrt_taylor_term(n) for n in np.arange(0,n+1)])}")
 print(f"number of terms used: {n+1}")
 
 print("")
