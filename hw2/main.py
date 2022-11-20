@@ -105,6 +105,10 @@ for method_name, method_func in methods:
     relE = np.abs(E_analytic[-1] - orbit_E(x)[-1]) / np.abs(E_analytic[-1])
     print(f'relE in {method_name} is {relE}')
 
+x_axs.plot(tn2, x_analytic[:, 0], label='analytic')
+y_axs.plot(tn2, x_analytic[:, 1], label='analytic')
+polar_axs.plot(np.arctan2(x_analytic[:, 1], x_analytic[:, 0]), np.sqrt(x_analytic[:, 0]**2+x_analytic[:, 1]**2), label='analytic')
+
 x_axs.set_xlabel(r't')
 x_axs.set_ylabel(r'x')
 x_axs.legend()
