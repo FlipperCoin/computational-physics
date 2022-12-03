@@ -63,7 +63,7 @@ x0 = np.array([1.5, 0, -1, 0])
 T = 6*np.pi
 
 st = time()
-eps = 0.00001
+eps = 0.000001
 x, t = rk4_adaptive_method(T, partial_three_body_f, x0, delta, eps=eps)
 ed = time()
 runtime = ed - st
@@ -118,7 +118,9 @@ e_fig.show()
 
 def create_animate(axs, t, x, y, frames):
     def animate(i):
-        x[-1] / frames
+        interval = t[-1] / frames
+        current_time = i * interval
+        i = len(t[t < current_time])
         axs.clear()
         axs.grid(True)
         axs.plot(x[i], y[i], '.', label='particle')
@@ -131,7 +133,7 @@ def create_animate(axs, t, x, y, frames):
 
 polar_ani_fig = plt.figure()
 polar_ani_axs = polar_ani_fig.subplots(subplot_kw={'projection': 'polar'})
-frames = 1000
+frames = 200
 polar_ani = FuncAnimation(polar_ani_fig, create_animate(polar_ani_axs, t, theta, r, frames), frames=frames, interval=50, repeat=False)
 polar_ani.save('three_body_adaptive_xt.mp4')
 print('done.')
