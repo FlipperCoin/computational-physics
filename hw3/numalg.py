@@ -83,7 +83,7 @@ def rk4_adaptive_method(T, f, x0, delta, eps=0.01, init_tau=None, s1=0.9, s2=2, 
 
     return x, t
 
-def ftcs(sres, tres, bc0, bc1, ic0, k=0.005):
+def ftcs(sres, tres, bc0, bc1, ic0, k=1):
     tf = len(bc0)
     xf = len(ic0)
     u = np.zeros((tf, xf))
