@@ -76,7 +76,10 @@ def rk4_adaptive_method(T, f, x0, delta, eps=0.01, init_tau=None, s1=0.9, s2=2, 
 
     t = np.array([0])
     while t[-1] < T:
-        x_new, t_new, tau = adaptive_step(x[-1], t[-1], tau)
+        if t[-1]+tau <= T:
+            x_new, t_new, tau = adaptive_step(x[-1], t[-1], tau)
+        else:
+            x_new, t_new, tau = adaptive_step(x[-1], t[-1], T-t[-1])
 
         x = np.vstack((x, x_new))
         t = np.append(t, t_new)

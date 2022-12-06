@@ -4,7 +4,7 @@ from time import time
 
 from numalg import rk4_method, rk4_adaptive_method
 
-def two_body_f(x, t):
+def two_body_f(x, t=None):
     return np.array([x[2], x[3], -x[0] / ((x[0] ** 2 + x[1] ** 2) ** (3 / 2)), -x[1] / ((x[0] ** 2 + x[1] ** 2) ** (3 / 2))])
 
 def two_body_rk4(T, N, x0, y0, vx0, vy0):
@@ -35,7 +35,7 @@ def delta(big_step, small_step, _):
     return np.abs(big_E - small_E) / np.abs(small_E)
 
 def two_body_rk4_adaptive(T, x0, y0, vx0, vy0):
-    return rk4_adaptive_method(T, two_body_f, np.array([x0, y0, vx0, vy0]), delta, eps=0.0005)
+    return rk4_adaptive_method(T, two_body_f, np.array([x0, y0, vx0, vy0]), delta, eps=0.007)
 
 def plot_elliptic():
     x_fig = plt.figure(3)
@@ -90,7 +90,10 @@ def max_tau():
         N_chosen = 27000
         granularity = 100
         while True:
+            st = time()
             x = method_func(T, N_chosen, x0, y0, vx0, vy0)
+            ed = time()
+            runtime = ed-st
 
             relE = np.abs(E_analytic[-1] - orbit_E(x)[-1]) / np.abs(E_analytic[-1])
             if relE > target_epsilon:
@@ -99,11 +102,11 @@ def max_tau():
 
             N_chosen -= granularity
 
-        print(f'for epsilon {target_epsilon}, tau <= {T/N_chosen}, N >= {N_chosen}')
+        print(f'for epsilon {target_epsilon}, tau <= {T/N_chosen}, N >= {N_chosen}, runtime {runtime}')
 
 def adaptive_elliptic():
     st = time()
-    x, tn = two_body_rk4_adaptive(3*T, x0, y0, vx0, vy0)
+    x, tn = two_body_rk4_adaptive(T, x0, y0, vx0, vy0)
     ed = time()
     total_time = ed - st
 
@@ -130,27 +133,27 @@ def adaptive_elliptic():
     x_axs.set_ylabel(r'x')
     x_axs.legend()
     x_axs.grid()
-    x_fig.savefig('numeric_two_body_elliptic_adaptive_xt.png')
+    x_fig.savefig('two_body_elliptic_adaptive_xt.png')
     x_fig.show()
 
     y_axs.set_xlabel(r't')
     y_axs.set_ylabel(r'y')
     y_axs.legend()
     y_axs.grid()
-    y_fig.savefig('numeric_two_body_elliptic_adaptive_yt.png')
+    y_fig.savefig('two_body_elliptic_adaptive_yt.png')
     y_fig.show()
 
     polar_axs.legend()
     polar_axs.grid(True)
     polar_axs.set_rticks([0.5, 1, 1.5])
-    polar_fig.savefig('numeric_two_body_elliptic_adaptive_polar.png')
+    polar_fig.savefig('two_body_elliptic_adaptive_polar.png')
     polar_fig.show()
 
     e_axs.set_xlabel(r't')
     e_axs.set_ylabel(r'$\epsilon = \frac{\Delta E}{E}$')
     e_axs.legend()
     e_axs.grid()
-    e_fig.savefig('numeric_two_body_elliptic_adaptive_error.png')
+    e_fig.savefig('two_body_elliptic_adaptive_error.png')
     e_fig.show()
 
 adaptive_elliptic()
