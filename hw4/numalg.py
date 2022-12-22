@@ -87,7 +87,7 @@ def rk4_adaptive_method(T, f, x0, delta, eps=0.01, init_tau=None, s1=0.9, s2=2, 
 
     return x, t
 
-def ftcs(sres, tres, bc0, bc1, ic0, k=1):
+def heat_ftcs(sres, tres, bc0, bc1, ic0, k=1):
     tf = len(bc0)
     xf = len(ic0)
     u = np.zeros((tf, xf))
@@ -100,3 +100,38 @@ def ftcs(sres, tres, bc0, bc1, ic0, k=1):
             u[t+1, x] = u[t, x] + (k*tres/(sres**2))*(u[t, x+1] + u[t, x-1] - 2*u[t, x])
 
     return u
+
+def advection_ftcs(f, source, ic, h, tau, time, periodic=True):
+    """
+
+    Args:
+        f: flux
+        source: source
+        ic: initial conditions
+        h: space resolution
+        tau: time resolution
+        time: total time to compute
+        periodic: periodic boundary conditions if True, else wall boundary conditions
+
+    Returns:
+
+    """
+
+    d = ic.shape
+    d = (d[0], d[1] + 2)
+    steps = int(time / tau)
+    a = np.zeros(d + (steps+1,))
+    a[:, 1:-1, 0] = ic
+
+    for n in tqdm(range(0, a.shape[2]-1)):
+        a[:, 0, n] = a[:, a.shape[1] - 2, n] if periodic else -a[:, 1, n]
+        a[:, a.shape[1] - 1, n] = a[:, 1, n] if periodic else -a[:, a.shape[1] - 2, n]
+        fn = f(a[:, :, n])
+        for i in range(1, a.shape[1]-1):
+            a[:, i, n+1] = a[:, i, n] - tau/(2*h) * (fn[:, i+1] - fn[:, i-1])
+            # !HOTFIX!
+            if a[0, i, n + 1] < 0:
+                a[0, i, n + 1] = 0
+
+    return a[:, 1:-1, :]
+
