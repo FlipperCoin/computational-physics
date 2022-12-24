@@ -3,29 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.integrate import cumtrapz
 
-from numalg import advection_ftcs
-
-def mass_f(a):
-    # rho*v
-    return a[1]
-
-def momentum_f(a):
-    # rho*v**2 + rho**(5/3)
-    mom = a[1]
-    mom_f = (mom**2 / a[0]) + a[0]**(5/3)
-    cond = np.isclose(a[0], 0)
-    mom_f[cond] = 0
-
-    return mom_f
-
-def f(a):
-    return np.array([mass_f(a), momentum_f(a)])
-
-def acc_source(a, g):
-    return a[0]*g
-
-def no_g_source(a):
-    return acc_source(a, 0)
+from numalg import gas_ftcs, gas_order2
 
 L = 1
 rho0 = 1
@@ -40,47 +18,80 @@ x_num = int(L/h) + 1
 xn = np.arange(0, L+h, h)
 tn = np.arange(0, T+tau, tau)
 
-ic = np.zeros((2, x_num))
-ic[0][90:] = 1
+rho0 = np.zeros(x_num)
+rho0[int(0.9/h):] = 1
+v0 = np.zeros(x_num)
+#
+# rho_o1, v_o1 = gas_ftcs(rho0, v0, h, tau, T)
+#
+# # total_mass = cumtrapz(rho[:, :], xn, axis=1)[:, -1]
+# total_mass_o1 = np.sum(rho_o1, 1)*h
+# total_mass_o1[np.abs(total_mass_o1 - 0.11) < 1e-8] = 0.11
+#
+# fig, axs = plt.subplots()
+# axs.plot(tn, total_mass_o1)
+# axs.set_xlabel('t')
+# axs.set_ylabel('total mass')
+# axs.grid()
+# fig.savefig('ftcs_mass.png')
+# fig.show()
+#
+# total_momentum_o1 = np.sum(rho_o1*v_o1, 1)*h
+# # total_momentum[np.abs(total_momentum - 0) < 1e-8] = 0
+#
+# fig, axs = plt.subplots()
+# axs.plot(tn, total_momentum_o1)
+# axs.set_xlabel('t')
+# axs.set_ylabel('total momentum')
+# axs.grid()
+# fig.savefig('ftcs_momentum.png')
+# fig.show()
+#
+# fig, axs = plt.subplots()
+# tN = [0, 20, 50, 100, 500, 2000, 30000]
+# for ti in tN:
+#     axs.plot(xn, rho_o1[ti, :], label=f't={tn[ti]:.3f}')
+# axs.set_xlabel('x')
+# axs.set_ylabel(r'$\rho$')
+# axs.grid()
+# axs.legend()
+# fig.savefig('ftcs_density_evolution.png')
+# fig.show()
 
-a = advection_ftcs(f, no_g_source, ic, h, tau, T, periodic=True)
-
-total_mass = cumtrapz(a[0, :, :], xn, axis=0)[-1, :]
+rho_o2, v_o2 = gas_order2(rho0, v0, h, tau, T)
 
 fig, axs = plt.subplots()
-axs.plot(tn, total_mass)
+tN = [0, 1000, 2500, 5000, 15000, 30000]
+for ti in tN:
+    axs.plot(xn, rho_o2[ti, :], label=f't={tn[ti]:.3f}')
+axs.set_xlabel('x')
+axs.set_ylabel(r'$\rho$')
+axs.grid()
+axs.legend()
+fig.savefig('order2_density_evolution.png')
+fig.show()
+
+total_mass_o2 = np.sum(rho_o2, 1)*h
+total_mass_o2[np.abs(total_mass_o2 - 0.11) < 1e-8] = 0.11
+
+fig, axs = plt.subplots()
+axs.plot(tn, total_mass_o2)
 axs.set_xlabel('t')
 axs.set_ylabel('total mass')
 axs.grid()
-fig.savefig('mass_ftcs.png')
+fig.savefig('order2_mass.png')
 fig.show()
 
-def create_animate(axs, a):
-    def animate(i):
-        axs.clear()
-        axs.plot(xn, a[0, :, i], '.')
-        axs.grid()
-        axs.set_xlabel(r'$x$')
-        axs.set_ylabel(r'$\rho$')
-        axs.set_xlim([0, L])
-        # axs.set_ylim([0, 1.5])
+total_momentum_o2 = np.sum(rho_o2*v_o2, 1)*h
+# total_momentum[np.abs(total_momentum - 0) < 1e-8] = 0
 
-    return animate
+fig, axs = plt.subplots()
+axs.plot(tn, total_momentum_o2)
+axs.set_xlabel('t')
+axs.set_ylabel('total momentum')
+axs.grid()
+fig.savefig('order2_momentum.png')
+fig.show()
 
-
-fig, ax = plt.subplots()
-animation = FuncAnimation(fig, create_animate(ax, a), frames=x_num, interval=100, repeat=False)
-animation.save(f'gas_expansion_ftcs.mp4')
 print('done.')
 
-#
-# fig = plt.figure()
-# ax = plt.axes()
-# c = ax.contourf(T, X, u, cmap='plasma')
-# ax.set_xlabel('t')
-# ax.set_ylabel('x')
-# fig.colorbar(c)
-# fig.show()
-# fig.savefig(f'heat_dynamic_{label}.png')
-#
-# print('done.')
