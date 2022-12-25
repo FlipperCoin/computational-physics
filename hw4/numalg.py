@@ -189,7 +189,7 @@ def v_order2(rho, v, h, tau, n, i):
 
     return v_i_np1
 
-def gas_order2(rho0, v0, h, tau, time, periodic=True):
+def gas_order2_old(rho0, v0, h, tau, time, periodic=True):
     xN = len(rho0)
     steps = int(time/tau)
     rho = np.zeros((steps+1, xN))
@@ -209,7 +209,7 @@ def gas_order2(rho0, v0, h, tau, time, periodic=True):
     return rho, v
 
 
-def gas_order2_wall(rho0, v0, h, tau, time):
+def gas_order2(rho0, v0, h, tau, time, g=(-10), periodic=False):
     xN = len(rho0)
     steps = int(time/tau)
     rho = np.zeros((steps+1, xN))
@@ -218,13 +218,21 @@ def gas_order2_wall(rho0, v0, h, tau, time):
     v[0, :] = v0
 
     def _rho(n, i):
+        if periodic:
+            return rho[n, i % xN]
         if i == -1:
             return rho[n, 0]
         if i == xN:
             return rho[n, xN-1]
+        # if i == -1:
+        #     return 0
+        # if i == xN:
+        #     return 0
         return rho[n, i]
 
     def _v(n, i):
+        if periodic:
+            return v[n, i % xN]
         if i == -1:
             return 0
         if i == xN:
@@ -256,23 +264,23 @@ def gas_order2_wall(rho0, v0, h, tau, time):
     #
     #     return rho_i_np1
 
-    def rho_order2_wall(rho, v, h, tau, n, i):
+    def rho_order2(rho, v, h, tau, n, i):
         p = lambda t,x,k=1: (_rho(t,x))**(5/3)
         corrections = 0
         first_order = - tau / (2 * h) * (_rho(n, i + 1) * _v(n, i + 1) - _rho(n, i - 1) * _v(n, i - 1))
         second_order = tau ** 2 / (2 * h) * (1 / h * (
                     _rho(n, i + 1) * _v(n, i + 1) ** 2 + p(n, i + 1) + _rho(n, i - 1) * _v(n, i - 1) ** 2 + p(n,
                                                                                                               i - 1) - 2 * (
-                                _rho(n, i) * _v(n, i) ** 2 + p(n, i))) - (-10) / 2 * (p(n, i + 1) - p(n, i - 1)))
-        if i == 0:
+                                _rho(n, i) * _v(n, i) ** 2 + p(n, i))) - g / 2 * (p(n, i + 1) - p(n, i - 1)))
+        if i == 0 and not periodic:
             corrections += -tau / (2 * h) * _rho(n, i) * _v(n, i)
-            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + -(-10)*_rho(n, i))
+            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) - g*_rho(n, i))
             # corrections += -(-10) * ((tau ** 2) / (2 * h)) * _rho(n, i)
 
-        if i == (xN - 1):
+        if i == (xN - 1) and not periodic:
             # corrections += (-10) * ((tau ** 2) / (4 * h)) * _rho(n, i)
             corrections += tau / (2 * h) * _rho(n, i) * _v(n, i)
-            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + (-10)*_rho(n, i))
+            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + g*_rho(n, i))
 
 
         return _rho(n, i) + first_order + second_order + corrections
@@ -299,11 +307,11 @@ def gas_order2_wall(rho0, v0, h, tau, time):
     #         v_i_np1 = v_i_n + order1 + order2
     #
     #         return v_i_np1
-    def v_order2_wall(rho, v, h, tau, n, i):
-        first_order = tau * (-10) - tau / (2 * h) * (1 / 2 * (_v(n, i + 1) ** 2 - _v(n, i - 1) ** 2) + 5 / 2 * (
+    def v_order2(rho, v, h, tau, n, i):
+        first_order = tau * g - tau / (2 * h) * (1 / 2 * (_v(n, i + 1) ** 2 - _v(n, i - 1) ** 2) + 5 / 2 * (
                     _rho(n, i + 1) ** (2 / 3) - _rho(n, i - 1) ** (2 / 3)))
         second_order1 = (tau ** 2) / (8 * h ** 2) * ((_v(n, i + 1) ** 2 - _v(n, i - 1) ** 2 + 20 / 3 * (
-                    _rho(n, i + 1) ** (2 / 3) - _rho(n, i - 1) ** (2 / 3)) - 2 * h * (-10)) * (_v(n, i + 1) - _v(n, i - 1)))
+                    _rho(n, i + 1) ** (2 / 3) - _rho(n, i - 1) ** (2 / 3)) - 2 * h * g) * (_v(n, i + 1) - _v(n, i - 1)))
         second_order2 = (tau ** 2) / (2 * h ** 2) * ((_v(n, i) ** 2 + 5 / 3 * _rho(n, i) ** (2 / 3)) * (
                     _v(n, i + 1) + _v(n, i - 1) - 2 * _v(n, i)) + 5 * (_rho(n, i + 1) ** (2 / 3) + _rho(n, i - 1) ** (
                     2 / 3) - 2 * _rho(n, i) ** (2 / 3)) * _v(n, i))
@@ -311,11 +319,11 @@ def gas_order2_wall(rho0, v0, h, tau, time):
 
     for n in tqdm(range(0, steps)):
         for i in range(0, xN):
-            rho[n+1, i] = rho_order2_wall(rho, v, h, tau, n, i)
+            rho[n+1, i] = rho_order2(rho, v, h, tau, n, i)
             if rho[n+1, i] <= 0:
                 rho[n + 1, i] = 0
                 v[n + 1, i] = 0
                 continue
-            v[n+1, i] = v_order2_wall(rho, v, h, tau, n, i)
+            v[n+1, i] = v_order2(rho, v, h, tau, n, i)
 
     return rho, v

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.integrate import cumtrapz
 
-from numalg import gas_order2_wall
+from numalg import gas_order2
 
 L = 1
 rho0 = 1
@@ -22,13 +22,17 @@ rho0 = np.zeros(x_num)
 rho0[int(0.9/h):] = 1
 v0 = np.zeros(x_num)
 
-rho_o2, v_o2 = gas_order2_wall(rho0, v0, h, tau, T)
+rho_analytic = ((2/5)*(-10)*xn + 1.236)**(3/2)
+rho_analytic[xn > (5/20*1.236)] = 0
+
+rho_o2, v_o2 = gas_order2(rho0, v0, h, tau, T)
 
 fig, axs = plt.subplots()
 # tN = [0, 1000, 2500, 5000, 10000]
 tN = [0, 250, 400, 1000, 2000, 4000]
 for ti in tN:
     axs.plot(xn, rho_o2[ti, :], label=f't={tn[ti]:.3f}')
+axs.plot(xn, rho_analytic, label=f'analytic')
 axs.set_xlabel('x')
 axs.set_ylabel(r'$\rho$')
 axs.grid()
