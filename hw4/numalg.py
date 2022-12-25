@@ -226,9 +226,13 @@ def gas_order2_wall(rho0, v0, h, tau, time):
 
     def _v(n, i):
         if i == -1:
-            return -v[n, 0]
+            return 0
         if i == xN:
-            return -v[n, xN-1]
+            return 0
+        # if i == -1:
+        #     return -v[n, 0]
+        # if i == xN:
+        #     return -v[n, xN-1]
         return v[n, i]
 
     # def rho_order2_wall(rho, v, h, tau, n, i):
@@ -261,14 +265,14 @@ def gas_order2_wall(rho0, v0, h, tau, time):
                                                                                                               i - 1) - 2 * (
                                 _rho(n, i) * _v(n, i) ** 2 + p(n, i))) - (-10) / 2 * (p(n, i + 1) - p(n, i - 1)))
         if i == 0:
-            # corrections += -tau / (2 * h) * _rho(n, i) * _v(n, i)
-            # corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + p(n, i))
-            corrections += -(-10) * ((tau ** 2) / (2 * h)) * _rho(n, i)
+            corrections += -tau / (2 * h) * _rho(n, i) * _v(n, i)
+            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + -(-10)*_rho(n, i))
+            # corrections += -(-10) * ((tau ** 2) / (2 * h)) * _rho(n, i)
 
         if i == (xN - 1):
-            corrections += -(-10) * ((tau ** 2) / (4 * h)) * _rho(n, i)
-            # corrections += tau / (2 * h) * _rho(n, i) * _v(n, i)
-            # corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + p(n, i))
+            # corrections += (-10) * ((tau ** 2) / (4 * h)) * _rho(n, i)
+            corrections += tau / (2 * h) * _rho(n, i) * _v(n, i)
+            corrections += tau ** 2 / (2 * h) * (1 / h * (_rho(n, i) * _v(n, i) ** 2) + (-10)*_rho(n, i))
 
 
         return _rho(n, i) + first_order + second_order + corrections

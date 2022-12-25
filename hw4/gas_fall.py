@@ -37,7 +37,6 @@ fig.savefig('gravity_density_evolution.png')
 fig.show()
 
 total_mass_o2 = np.sum(rho_o2, 1)*h
-total_mass_o2[np.abs(total_mass_o2 - 0.11) < 1e-8] = 0.11
 
 fig, axs = plt.subplots()
 axs.plot(tn, total_mass_o2)
@@ -46,3 +45,16 @@ axs.set_ylabel('total mass')
 axs.grid()
 fig.savefig('gravity_mass.png')
 fig.show()
+
+total_momentum_o2 = np.sum(rho_o2*v_o2, 1)*h
+# total_momentum[np.abs(total_momentum - 0) < 1e-8] = 0
+
+fig, axs = plt.subplots()
+axs.plot(tn, total_momentum_o2)
+axs.set_xlabel('t')
+axs.set_ylabel('total momentum')
+axs.grid()
+fig.savefig('gravity_momentum.png')
+fig.show()
+
+print('done.')
