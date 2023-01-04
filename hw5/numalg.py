@@ -1,5 +1,6 @@
 import numpy as np
 from tqdm import tqdm
+from time import time
 
 def euler_step(x, f, tau):
     return x + tau * f(x)
@@ -335,21 +336,9 @@ def relaxed_poisson(phi0_args, rho, h, eps=1e-3):
     k0 = rho.shape[2]//2
 
     def fill_reflection(phi):
-        calc = phi[i0:, j0:, k0:]
-        iflip = np.flip(calc, 0)
-        jflip = np.flip(calc, 1)
-        kflip = np.flip(calc, 2)
-        ijflip = np.flip(iflip, 1)
-        ikflip = np.flip(iflip, 2)
-        jkflip = np.flip(jflip, 2)
-        ijkflip = np.flip(ijflip, 2)
-        phi[:i0, j0:, k0:] = iflip
-        phi[i0:, :j0, k0:] = jflip
-        phi[i0:, j0:, :k0] = kflip
-        phi[i0:, :j0, :k0] = jkflip
-        phi[:i0, j0:, :k0] = ikflip
-        phi[:i0, :j0, k0:] = ijflip
-        phi[:i0, :j0, :k0] = ijkflip
+        phi[:i0, j0:, k0:] = np.flip(phi, 0)[:i0, j0:, k0:]
+        phi[:, j0:, :k0] = np.flip(phi, 2)[:, j0:, :k0]
+        phi[:, :j0, :] = np.flip(phi, 1)[:, :j0, :]
 
         return phi
 
@@ -358,7 +347,10 @@ def relaxed_poisson(phi0_args, rho, h, eps=1e-3):
         for i in range(i0, phi.shape[0]-1):
             for j in range(j0, phi.shape[1]-1):
                 for k in range(k0, phi.shape[2]-1):
-                    next_phi[i,j,k] = (1/6)*(phi[i+1,j,k]+phi[i-1,j,k]+phi[i,j+1,k]+phi[i,j-1,k]+phi[i,j,k+1]+phi[i,j,k-1]+(h**2)*4*np.pi*rho[i,j,k])
+                    next_phi[i,j,k] = (1/26)*(phi[i+1,j,k]+phi[i-1,j,k]+phi[i,j+1,k]+phi[i,j-1,k]+phi[i,j,k+1]+phi[i,j,k-1]+(h**2)*4*np.pi*rho[i,j,k]) \
+                                      + (1/26)*(phi[i+1,j+1,k]+phi[i+1,j-1,k]+phi[i+1,j,k+1]+phi[i+1,j,k-1]+phi[i+1,j+1,k+1]+phi[i+1,j+1,k-1]+phi[i+1,j-1,k+1]+phi[i+1,j-1,k-1]) + \
+                                      (1/26)*(phi[i-1,j+1,k]+phi[i-1,j-1,k]+phi[i-1,j,k+1]+phi[i-1,j,k-1]+phi[i-1,j+1,k+1]+phi[i-1,j+1,k-1]+phi[i-1,j-1,k+1]+phi[i-1,j-1,k-1]) + \
+                                      (1/26)*(phi[i,j+1,k+1]+phi[i,j+1,k-1]+phi[i,j-1,k+1]+phi[i,j-1,k-1])
 
         next_phi = fill_reflection(next_phi)
 
@@ -370,6 +362,8 @@ def relaxed_poisson(phi0_args, rho, h, eps=1e-3):
 
     phi = np.array(phi0_mat)
 
+    start = time()
+
     phi_next = step(phi)
     phi_next[mask_indices] = phi0
 
@@ -380,4 +374,6 @@ def relaxed_poisson(phi0_args, rho, h, eps=1e-3):
         phi_next = step(phi)
         phi_next[mask_indices] = phi0
 
-    return phi_next, n
+    end = time()
+
+    return phi_next, n, (end-start)
