@@ -109,7 +109,7 @@ mask[ground_cor] = 1
 phi0_args = (phi0_mat, mask)
 
 print("q2.")
-(q2_phi_sol, n, sec_elapsed) = relaxed_poisson(phi0_args, rho0, h, (1/5)*1e-2)
+(q2_phi_sol, n, sec_elapsed) = relaxed_poisson(phi0_args, rho0, h, 1e-3)
 
 print(f"phi complete; n: {n}, total time: {sec_elapsed} sec.")
 
@@ -135,6 +135,8 @@ plt.show()
 
 plt.figure(dpi=150)
 plt.quiver(Y[i(0),:,:], Z[i(0),:,:], q2_f[i(0),:,:,1], q2_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
 plt.xlabel("y")
 plt.ylabel("z")
 plt.savefig("q2_E_inside.png")
@@ -194,7 +196,7 @@ stop = time()
 print(f"rho complete; total time: {stop-start} sec.")
 
 plt.figure(dpi=150)
-plt.imshow(q3_rho_sol[i(0),:,:])
+plt.imshow(q3_phi_sol[i(0),:,:])
 plt.xlabel("y")
 plt.ylabel("z")
 plt.colorbar(label=r"$\Phi$")
@@ -203,6 +205,8 @@ plt.show()
 
 plt.figure(dpi=150)
 plt.quiver(Y[i(0),:,:], Z[i(0),:,:], q3_f[i(0),:,:,1], q3_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
 plt.xlabel("y")
 plt.ylabel("z")
 plt.savefig("q3_E_inside.png")
@@ -231,6 +235,8 @@ masked_f[X**2+Y**2+Z**2 < 0.2] = 0
 
 plt.figure(dpi=150)
 plt.quiver(Y[i(0),:,:], Z[i(0),:,:], masked_f[i(0),:,:,1], masked_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
 plt.xlabel("y")
 plt.ylabel("z")
 plt.savefig("q3_only_charge_E_inside.png")
@@ -268,6 +274,8 @@ masked_f = np.array(q3_charge_f)
 masked_f[X**2+Y**2+Z**2 < 0.2] = 0
 plt.figure(dpi=150)
 plt.quiver(Y[i(0),:,:], Z[i(0),:,:], masked_f[i(0),:,:,1], masked_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
 plt.xlabel("y")
 plt.ylabel("z")
 plt.savefig("q3_charge_E_inside.png")
@@ -328,6 +336,8 @@ masked_f = np.array(charge_nopot_f)
 masked_f[X**2+Y**2+Z**2 < 0.3] = 0
 plt.figure(dpi=150)
 plt.quiver(Y[i(0),:,:], Z[i(0),:,:], masked_f[i(0),:,:,1], masked_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
 plt.xlabel("y")
 plt.ylabel("z")
 plt.savefig("q3_charge_nopot_E_inside.png")
@@ -344,7 +354,7 @@ plt.show()
 plt.figure(dpi=150)
 plt.plot(x, q3_charge_phi_sol[:,j(0),k(0)], label='charge in box')
 plt.plot(x, q3_phi_sol[:,j(0),k(0)], label='only box')
-plt.plot(x, charge_nopot_phi_sol[:,j(0),k(0)], label='only charge')
+# plt.plot(x, charge_nopot_phi_sol[:,j(0),k(0)], label='only charge')
 plt.grid()
 plt.legend()
 plt.xlabel(r'x')
@@ -354,3 +364,78 @@ plt.show()
 
 #%% q4
 
+
+rho0 = np.zeros(X.shape)
+
+phi0_mat = np.zeros(X.shape)
+
+phi_s = 1
+phi0_mat[i(box_r),j(-box_r):j(box_r),k(-box_r):k(box_r)] = phi_s
+phi0_mat[i(-box_r),j(-box_r):j(box_r),k(-box_r):k(box_r)] = phi_s
+phi0_mat[i(-box_r):i(box_r),j(box_r),k(-box_r):k(box_r)] = phi_s
+phi0_mat[i(-box_r):i(box_r),j(-box_r),k(-box_r):k(box_r)] = phi_s
+phi0_mat[i(-box_r):i(box_r),j(-box_r):j(box_r),k(box_r)] = phi_s
+phi0_mat[i(-box_r):i(box_r),j(-box_r):j(box_r),k(-box_r)] = phi_s
+
+phi0_mat[i(box_r),j(-box_r/2):j(box_r/2),k(-box_r/2):k(box_r/2)] = 0
+phi0_mat[i(-box_r),j(-box_r/2):j(box_r/2),k(-box_r/2):k(box_r/2)] = 0
+phi0_mat[i(-box_r/2):i(box_r/2),j(box_r),k(-box_r/2):k(box_r/2)] = 0
+phi0_mat[i(-box_r/2):i(box_r/2),j(-box_r),k(-box_r/2):k(box_r/2)] = 0
+phi0_mat[i(-box_r/2):i(box_r/2),j(-box_r/2):j(box_r/2),k(box_r)] = 0
+phi0_mat[i(-box_r/2):i(box_r/2),j(-box_r/2):j(box_r/2),k(-box_r)] = 0
+
+phi0_mat[ground_cor] = 0
+
+mask = np.zeros(phi0_mat.shape)
+mask[phi0_mat != 0] = 1
+mask[ground_cor] = 1
+phi0_args = (phi0_mat, mask)
+
+(q4_phi_sol, n, sec_elapsed) = relaxed_poisson(phi0_args, rho0, h, (1/5)*1e-2)
+
+print(f"phi complete; n: {n}, total time: {sec_elapsed} sec.")
+
+start = time()
+q4_f = e_field(q4_phi_sol)
+stop = time()
+
+print(f"E complete; total time: {stop-start} sec.")
+
+start = time()
+q4_rho_sol = rho(q4_phi_sol)
+stop = time()
+
+print(f"rho complete; total time: {stop-start} sec.")
+
+plt.figure(dpi=150)
+plt.imshow(q4_phi_sol[i(0),:,:])
+plt.xlabel("y")
+plt.ylabel("z")
+plt.colorbar(label=r"$\Phi$")
+plt.savefig("q4_phi_inside.png")
+plt.show()
+
+plt.figure(dpi=150)
+plt.quiver(Y[i(0),:,:], Z[i(0),:,:], q4_f[i(0),:,:,1], q4_f[i(0),:,:,2])
+ax = plt.gca()
+ax.set_aspect('equal', adjustable='box')
+plt.xlabel("y")
+plt.ylabel("z")
+plt.savefig("q4_E_inside.png")
+plt.show()
+
+plt.figure(dpi=150)
+plt.imshow(q4_rho_sol[i(0),:,:])
+plt.xlabel("y")
+plt.ylabel("z")
+plt.colorbar(label=r"$\rho$")
+plt.savefig("q4_rho_inside.png")
+plt.show()
+
+plt.figure(dpi=150)
+plt.imshow(q4_rho_sol[i(-box_r),:,:])
+plt.xlabel("y")
+plt.ylabel("z")
+plt.colorbar(label=r"$\rho$")
+plt.savefig("q4_rho_surface.png")
+plt.show()
